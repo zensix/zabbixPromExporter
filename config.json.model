@@ -1,0 +1,11 @@
+{
+    "version": "0.2",
+    "zbx":{
+        "url": "http://zabbix.domain.org",
+        "user": "user zabbix",
+        "password": "password zabbix"
+    },
+    "exporter":{
+        "hostlist": []
+    }
+}

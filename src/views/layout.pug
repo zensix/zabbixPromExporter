@@ -1,0 +1,35 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/bootstrap/css/bootstrap.min.css')
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    body 
+      .row 
+        .col-sm-6
+          h1= title
+        .col-sm-4
+          p 
+            | zbxPromExporter Version   
+            =config.version 
+          if zbxcon.status
+            p.text-success Connected to   
+              =config.zbx.url
+          else 
+            p.text-danger Not connnected to  
+              =config.zbx.url
+        .col-sm-2 
+          a(href='/') Home
+
+      block content
+      .footer
+          pre
+            code#debug 
+              block debug 
+
+
+  script(src='/jquery/jquery.min.js')
+  script(src='/bootstrap/js/bootstrap.min.js')
+  script(src='/javascripts/globalfunctions.js')
+
+  block endscript

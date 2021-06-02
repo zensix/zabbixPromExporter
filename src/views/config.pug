@@ -1,0 +1,82 @@
+extends layout
+
+block content
+  .row
+    .col-6
+      h3 Zabbix Configuration
+
+      form#form_config_zbx
+        each val, key in config.zbx
+          .form-group.row
+            label.col-sm-2.col-form-label("for"=key) #{key}
+            .col-sm-10
+              if(key == "password")
+                input.form-control(type="password" name= key ,id= key, value = val)
+              else
+                input.form-control(type="string" name= key ,id= key, value = val)
+        button.btn.btn-primary(type="submit") Save
+    .col-6
+      h3 Exported hosts
+      label("for hosts") Hosts
+      select.form-control#hosts-list(multiple, size=20)
+
+block endscript
+  script(type='text/javascript').
+    var config =  !{JSON.stringify(config)}
+    function generate_hostlist(data){
+        $("#hosts-list").empty()
+        data.forEach(host => {
+          if(config.exporter.hostlist.includes(host.name)){
+            $("#hosts-list").append("<option selected value="+host.name+">"+host.name)
+          } else {
+            $("#hosts-list").append("<option value="+host.name+">"+host.name)
+          }
+        });
+    }
+    function gethosts(){
+      $.ajax({
+            method: "GET",
+            url: "/api/zbx/hosts",
+          }).done(function(data) {
+              generate_hostlist(data.result)
+          });
+    };
+
+    $(document).ready(function () {
+      gethosts()
+       $(".form-control").on("change",function(event){
+          $("#debug").empty().append($(this).attr("id")+":"+$(this).val())
+       })
+
+      $( "#form_config_zbx" ).submit(function( event ) {
+        event.preventDefault();
+        var data = $(this).serializeFormJSON();
+        $.ajax({
+            method: "POST",
+            url: "/api/config",
+            data: data
+          }).done(function(data) {
+               $("#debug").empty().append(JSON.stringify(data))
+          });
+      });
+
+      $("#hosts-list").on("change",function(event){
+        $("#debug").empty().append($(this).attr("id")+":"+$(this).val())
+        event.preventDefault();
+        var data = $(this).val()
+        hosts=[]
+        $.each(data, function(key, value) {
+          hosts.push(value);
+        });
+        $.ajax({
+            method: "POST",
+            url: "/api/config/hosts",
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(hosts)
+        }).done(function(data) {
+             $("#debug").empty().append(JSON.stringify(data))
+        });
+      })
+    });
+
