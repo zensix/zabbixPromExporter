@@ -15,22 +15,25 @@ block content
               else
                 input.form-control(type="string" name= key ,id= key, value = val)
         button.btn.btn-primary(type="submit") Save
+        a(class='btn btn-warning float-right' role="button" href='/reconnect') Reconnect
     .col-6
-      h3 Exported hosts
-      label("for hosts") Hosts
-      select.form-control#hosts-list(multiple, size=20)
+      h3 hosts ( green = exported)
+      #hosts-list-checkbox
+
+
 
 block endscript
   script(type='text/javascript').
     var config =  !{JSON.stringify(config)}
-    function generate_hostlist(data){
-        $("#hosts-list").empty()
+    function generate_hostlist_btn(data){
+        $("#hosts-list-checkbox").empty()
         data.forEach(host => {
           if(config.exporter.hostlist.includes(host.name)){
-            $("#hosts-list").append("<option selected value="+host.name+">"+host.name)
+            $("#hosts-list-checkbox").append('<button type="button" class="btn btn-success btn-sm host-select" id="'+host.name+'">'+host.name+'</button>')
           } else {
-            $("#hosts-list").append("<option value="+host.name+">"+host.name)
+            $("#hosts-list-checkbox").append('<button type="button" class="btn btn-secondary btn-sm host-select" id="'+host.name+'">'+host.name+'</button>')
           }
+
         });
     }
     function gethosts(){
@@ -38,15 +41,12 @@ block endscript
             method: "GET",
             url: "/api/zbx/hosts",
           }).done(function(data) {
-              generate_hostlist(data.result)
+              generate_hostlist_btn(data.result)
           });
     };
 
     $(document).ready(function () {
       gethosts()
-       $(".form-control").on("change",function(event){
-          $("#debug").empty().append($(this).attr("id")+":"+$(this).val())
-       })
 
       $( "#form_config_zbx" ).submit(function( event ) {
         event.preventDefault();
@@ -60,23 +60,34 @@ block endscript
           });
       });
 
-      $("#hosts-list").on("change",function(event){
-        $("#debug").empty().append($(this).attr("id")+":"+$(this).val())
+       $(document).on("click", ".host-select",function(event) {
         event.preventDefault();
-        var data = $(this).val()
-        hosts=[]
-        $.each(data, function(key, value) {
-          hosts.push(value);
-        });
-        $.ajax({
+        hostname=$(this).attr("id")
+        data={hostname: $(this).attr("id")}
+        $("#debug").empty().append(JSON.stringify(data))
+        if(config.exporter.hostlist.includes(hostname)){
+            $.ajax({
             method: "POST",
-            url: "/api/config/hosts",
+            url: "/api/config/host/remove",
             dataType: "json",
             contentType: "application/json; charset=utf-8",
-            data: JSON.stringify(hosts)
-        }).done(function(data) {
+            data: JSON.stringify(data)
+          }).done(function(data) {
              $("#debug").empty().append(JSON.stringify(data))
-        });
-      })
+             location.reload()
+          });
+        } else{
+          $.ajax({
+            method: "POST",
+            url: "/api/config/host/add",
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(data)
+          }).done(function(data) {
+             $("#debug").empty().append(JSON.stringify(data))
+             location.reload()
+          });
+        }
+      });
     });
 

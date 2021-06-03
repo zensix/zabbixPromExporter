@@ -17,7 +17,7 @@ if ok result is:
 # Installation
 ## Get the branch 
 
-     git checkout main 
+     git checkout v0.2 
 
 ### Build Docker image 
 

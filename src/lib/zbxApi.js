@@ -25,6 +25,7 @@ module.exports = class ZabbixApi {
 
     getinfo(method,params,cb){
         var self=this
+        if(self.status != 0){
             axios({
                 method:'post',
                 url: self.url,
@@ -40,7 +41,10 @@ module.exports = class ZabbixApi {
             }).then(function( response){
                 cb(response.data)
             })
-    }   
+        } else {
+            cb({message: "zabbix not connected"})
+        }   
+    }
 
     connect(cb) {
         var self=this
@@ -59,13 +63,16 @@ module.exports = class ZabbixApi {
                 id: 1,
                 auth: self.token
             }
-        }).then(function( response){
+        }).then(( response) => {
            self.token = response.data.result
            self.lastaccessdate=response.headers['date']
            self.accesscontrolmaxage= response.headers['access-control-max-age']
            self.status = 1
            cb(response)
-        })
+        }, (error) => {
+            self.status = 0
+            cb("not connected")
+        });
     }
     status(){
         return this.status

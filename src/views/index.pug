@@ -1,15 +1,6 @@
 extends layout
 
 block content 
-  h3 Url:
-  ul
-    li 
-      a(href='/config') Configuration
-    li 
-      a(href='/api/metrics/prometheus') Prometheus Exporter
-    li 
-      a(href='/api/status') Application status
-  hr
   h3 Exported hosts:
   ul
    each host in config.exporter.hostlist

@@ -5,21 +5,33 @@ html
     link(rel='stylesheet', href='/bootstrap/css/bootstrap.min.css')
     link(rel='stylesheet', href='/stylesheets/style.css')
     body 
-      .row 
-        .col-sm-6
-          h1= title
-        .col-sm-4
-          p 
-            | zbxPromExporter Version   
-            =config.version 
-          if zbxcon.status
-            p.text-success Connected to   
-              =config.zbx.url
-          else 
-            p.text-danger Not connnected to  
-              =config.zbx.url
-        .col-sm-2 
-          a(href='/') Home
+      nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
+        a.navbar-brand(href="#") zbxPromExporter
+        button.navbar-toggler(type="button", data-toggle="collapse", data-target="#navbarSupportedContent", aria-controls="navbarSupportedContent",aria-expanded="false",aria-label="Toggle navigation")
+          span.navbar-toggler-icon
+        .collapse.navbar-collapse#navbarSupportedContent
+          ul.navbar-nav.mr-auto
+            li.nav-item 
+              a.nav-link(href="/") Home      
+            li.nav-item
+              a.nav-link(href='/config') Configuration
+            li.nav-item.dropdown
+              a.nav-link.dropdown-toggle(href="#" id="navbarDropdownMenuLink", data-toggle="dropdown", aria-haspopup="true", aria-expanded="false") API
+              .dropdown-menu(aria-labelledby="navbarDropdownMenuLink")
+                a.dropdown-item(href='/api/metrics/prometheus') Prometheus Exporter
+                a.dropdown-item(href='/api/status') Application status
+ 
+          span.navbar-text
+            if zbxcon.status
+              p.float-right.text-success Connected to   
+               =config.zbx.url
+            else 
+              p.float-right.text-danger Not connnected to  
+               =config.zbx.url
+          span.navbar-text
+            p.float-right ,Version:   
+             =config.version 
+   
 
       block content
       .footer

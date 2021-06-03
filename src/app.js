@@ -16,7 +16,7 @@ const zbxapi = require('./lib/zbxApi');
 const zabbixpromExporter = require('./lib/zbxPromExporter');
 var zbxcli = new zbxapi(config.zbx.url,config.zbx.user,config.zbx.password)
 zbxcli.connect( function(response){
-  console.log(response.data.result)
+  console.log(response)
 })
 
 
@@ -65,6 +65,17 @@ app.use(function(req, res, next) {
   
   next();
 });
+app.get('/reconnect', function(req, res) {
+  zbxcli = new zbxapi(config.zbx.url,config.zbx.user,config.zbx.password)
+  zbxcli.connect( function(response){
+    console.log(response)
+    app.set("zbxcon",zbxcli);
+    res.locals.zbxcon = app.get('zbxcon');
+    res.locals.applis = app.get('applis')
+    res.locals.config = app.get('config')
+    res.redirect('/')
+  })
+})
 
 app.use('/', indexRouter);
 app.use('/config', configRouter);

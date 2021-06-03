@@ -45,6 +45,7 @@ function zbx_pb_to_prometheus(zbxcli,params) {
       gethosts(zbxcli,params)
       .then((hosts) => {
         (async function loop() {
+          console.log(hosts)
           for( let i=0 ;i < hosts.length;i++){
             await getitems(zbxcli,{hostids: hosts[i].hostid}).then(items => {
               items.forEach(function(item){ 
@@ -53,7 +54,7 @@ function zbx_pb_to_prometheus(zbxcli,params) {
                 }
               })
             })
-            if(i=== hosts.length-1){
+            if(i=== hosts.length-1 ){
               resolve(output1)
             }
           }
@@ -69,8 +70,6 @@ const getitems = (zbxcli,param) => {
       })
   })
 }
-
-
 
 
 /* GET home page. */
@@ -104,7 +103,39 @@ router.post('/config', function(req, res, next) {
     fs.writeFileSync(res.locals.applis.RootPath+'/config.json', data);
     res.json({"status":"ok","message":"Config updated"})
 })
-  
+
+
+router.post('/config/host/add', function(req, res, next) {
+  console.log(req.body.hostname)
+  if(res.locals.config.exporter.hostlist.includes(req.body.hostname)){
+    message=req.body.hostname+" is already exported"
+    res.json({"status":"ok","message":message})
+  } else {
+    console.log(res.locals.config.exporter.hostlist)
+    res.locals.config.exporter.hostlist.push(req.body.hostname)
+    let data = JSON.stringify(res.locals.config,null,2);
+    fs.writeFileSync(res.locals.applis.RootPath+'/config.json', data);
+    res.json({"status":"ok","message":"Config updated"})
+
+  }
+})
+
+router.post('/config/host/remove', function(req, res, next) {
+  console.log(req.body.hostname)
+  if(res.locals.config.exporter.hostlist.includes(req.body.hostname)){
+    console.log(res.locals.config.exporter.hostlist)
+    const result = res.locals.config.exporter.hostlist.filter(p => p!=req.body.hostname);
+
+    res.locals.config.exporter.hostlist=result
+    let data = JSON.stringify(res.locals.config,null,2);
+    fs.writeFileSync(res.locals.applis.RootPath+'/config.json', data);
+    res.json({"status":"ok","message":"Config updated"})
+  } else {
+    message=req.body.hostname+" is already not exported"
+    res.json({"status":"ok","message":message})
+  }
+})
+
 
 router.post('/config/hosts', function(req, res, next) {
     res.locals.config.exporter.hostlist=req.body
@@ -117,14 +148,18 @@ router.post('/config/hosts', function(req, res, next) {
 
 
 router.get('/metrics/prometheus', function(req, res, next) {
-  const result =  Promise.all([zbx_pb_to_prometheus(res.locals.zbxcon,{}), zbx_items_to_prometheus(res.locals.zbxcon,{"filter": {"name": res.locals.config.exporter.hostlist},"output":["name","hostid"]})]).then(values => {
-
-    res.set('Content-Type', 'text/plain');
-    for(i=0 ;i < values.length;i++){
-      res.write(values[i])
+    if(res.locals.config.exporter.hostlist.length>0){
+      funcs=[zbx_pb_to_prometheus(res.locals.zbxcon,{}), zbx_items_to_prometheus(res.locals.zbxcon,{"filter": {"name": res.locals.config.exporter.hostlist},"output":["name","hostid"]})]
+    }else{
+      funcs=[zbx_pb_to_prometheus(res.locals.zbxcon,{})]
     }
-    res.end()
-  });
+    const result =  Promise.all(funcs).then(values => {
+      res.set('Content-Type', 'text/plain');
+      for(i=0 ;i < values.length;i++){
+        res.write(values[i])
+      }
+      res.end()
+    });
 })
 
 module.exports = router;
